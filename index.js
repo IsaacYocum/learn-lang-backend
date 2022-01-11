@@ -48,7 +48,7 @@ app.get('/api/languages/:language', (req, res) => {
             res.status(404).send(`404: The language '${language}' does not exist.`)
             throw err;
         }
-    
+
         res.json(rows[0])
     })
 })
@@ -68,15 +68,22 @@ app.get('/api/languages/:language/words/:word', (req, res) => {
     let language = req.params.language.toLocaleLowerCase();
     let word = req.params.word.toLocaleLowerCase();
     console.log(language, word)
-    db.all(`SELECT * FROM words
+    // db.parallelize(() => {
+        db.all(`SELECT * FROM words
             WHERE word = '${word}' AND language ='${language}'`, (err, rows) => {
-        if (err) {
-            res.status(404).send(`404: The ${language} word '${word}' does not exist.`)
-            throw err;
-        }
-    
-        res.json(rows[0])
-    })
+            if (err) {
+                res.status(500).send(err.message)
+                throw err;
+            }
+
+            if (rows[0] === undefined) {
+                res.status(404).send(`404: The ${language} word '${word}' does not exist.`)
+            }
+
+            console.log(rows[0])
+            res.json(rows[0])
+        })
+    // })
 })
 
 const PORT = 3001
