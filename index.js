@@ -25,7 +25,7 @@ app.get('/api/texts', (req, res) => {
 })
 
 app.get('/api/texts/:text', (req, res) => {
-    let text = req.params.text;
+    let text = req.params.text.toLocaleLowerCase();
     res.sendFile(text, { root: './texts' })
 })
 
@@ -40,7 +40,7 @@ app.get('/api/languages', (req, res) => {
 
 // Languages endpoints
 app.get('/api/languages/:language', (req, res) => {
-    let language = req.params.language;
+    let language = req.params.language.toLocaleLowerCase();
     console.log(language)
     db.all(`SELECT * FROM languages
             WHERE language = '${language}'`, (err, rows) => {
@@ -49,11 +49,12 @@ app.get('/api/languages/:language', (req, res) => {
             throw err;
         }
     
-        res.json(rows)
+        res.json(rows[0])
     })
 })
 
-// Languages endpoints
+// Words endpoints
+
 app.get('/api/languages/:language/words', (req, res) => {
     db.all('SELECT * FROM words', (err, rows) => {
         if (err) throw err;
@@ -62,18 +63,19 @@ app.get('/api/languages/:language/words', (req, res) => {
     })
 })
 
-// Languages endpoints
-app.get('/api/languages/:language/words', (req, res) => {
-    let language = req.params.language;
-    console.log(language)
+
+app.get('/api/languages/:language/words/:word', (req, res) => {
+    let language = req.params.language.toLocaleLowerCase();
+    let word = req.params.word.toLocaleLowerCase();
+    console.log(language, word)
     db.all(`SELECT * FROM words
-            WHERE word = '${language}'`, (err, rows) => {
+            WHERE word = '${word}'`, (err, rows) => {
         if (err) {
-            res.status(404).send(`404: The language '${language}' does not exist.`)
+            res.status(404).send(`404: The ${language} word '${word}' does not exist.`)
             throw err;
         }
     
-        res.json(rows)
+        res.json(rows[0])
     })
 })
 
