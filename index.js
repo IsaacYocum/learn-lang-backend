@@ -69,7 +69,7 @@ app.get('/api/languages/:language/words/:word', (req, res) => {
     let word = req.params.word.toLocaleLowerCase();
     console.log(language, word)
     db.all(`SELECT * FROM words
-            WHERE word = '${word}'`, (err, rows) => {
+            WHERE word = '${word}' AND language ='${language}'`, (err, rows) => {
         if (err) {
             res.status(404).send(`404: The ${language} word '${word}' does not exist.`)
             throw err;
