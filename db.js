@@ -21,15 +21,16 @@ db.serialize(() => {
       console.log(row.language)
     })
 
-  db.run(`CREATE TABLE words(wordId INTEGER PRIMARY KEY, 
+  db.run(`CREATE TABLE words(word TEXT PRIMARY KEY, 
                              language TEXT,
-                             word TEXT,
+                             familiarity INTEGER,
+                             translation TEXT,
                              FOREIGN KEY(language) REFERENCES languages(language))`)
-    .run(`INSERT INTO words(language, word)
-          VALUES ('english', 'the'),
-                 ('english', 'boy'),
-                 ('english', 'who'),
-                 ('english', 'lived')`)
+    .run(`INSERT INTO words(word, language, familiarity, translation)
+          VALUES ('the', 'english', 5, 'the translation'),
+                 ('boy', 'english', 4, 'boy translation'),
+                 ('who', 'english', 3, 'who translation'),
+                 ('lived', 'english', 2, 'lived translation')`)
     .each(`SELECT word from words`, (err, row) => {
       if (err) throw err;
       console.log(row.word)
