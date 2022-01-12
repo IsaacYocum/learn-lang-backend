@@ -88,6 +88,6 @@ app.get('/api/languages/:language/words/:word', (req, res) => {
 })
 
 const PORT = 3001
-app.listen(process.env.port || PORT, () => {
+app.listen(process.env.PORT || PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })
