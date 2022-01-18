@@ -1,11 +1,13 @@
 const express = require('express')
-const app = express()
 const cors = require('cors')
+const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
 let db = new sqlite3.Database('./db/learn-lang.db')
 
+const app = express()
 app.use(express.static('build'))
 app.use(express.static('texts'))
+app.use(bodyParser.json());
 app.use(cors())
 
 app.get('/api/texts', (req, res) => {
@@ -68,9 +70,9 @@ app.get('/api/languages/:language/words', (req, res) => {
 app.get('/api/languages/:language/words/:word', (req, res) => {
     let language = req.params.language.toLocaleLowerCase();
     let word = req.params.word.toLocaleLowerCase();
-    console.log(language, word)
-    // db.parallelize(() => {
-        db.all(`SELECT * FROM words
+    // console.log(language, word)
+    db.parallelize(() => {
+        db.all(`SELECT word, familiarity, translation FROM words
             WHERE word = '${word}' AND language ='${language}'`, (err, rows) => {
             if (err) {
                 res.status(500).send(err.message)
@@ -81,10 +83,60 @@ app.get('/api/languages/:language/words/:word', (req, res) => {
                 res.status(404).send(`404: The ${language} word '${word}' does not exist.`)
             }
 
-            console.log(rows[0])
+            // console.log(rows[0])
             res.json(rows[0])
         })
-    // })
+    })
+})
+
+app.get('/api/languages/:language/words/:word/familiarity', (req, res) => {
+    let language = req.params.language.toLocaleLowerCase();
+    let word = req.params.word.toLocaleLowerCase();
+    // console.log(language, word)
+    db.parallelize(() => {
+        db.all(`SELECT familiarity FROM words
+            WHERE word = '${word}' AND language ='${language}'`, (err, rows) => {
+            if (err) {
+                res.status(500).send(err.message)
+                throw err;
+            }
+
+            if (!rows) {
+                res.status(404).send(`404: The ${language} word '${word}' does not exist.`)
+            }
+
+            res.json(rows[0])
+        })
+    })
+})
+
+app.post('/api/languages/:language/getTextWords', (req, res) => {
+    console.log(req.body)
+    // let words = `(${req.body.join().toLocaleLowerCase()})`
+    let words = `(${req.body.map(word => `'${word.toLocaleLowerCase()}'`).join(',')})`
+    console.log(words)
+    let language = req.params.language.toLocaleLowerCase();
+    // console.log(language, word)
+    db.parallelize(() => {
+        db.all(`SELECT * FROM words
+                WHERE word IN ${words} AND language ='${language}'`, (err, rows) => {
+                    console.log('db response', rows)
+            if (err) {
+                res.status(500).send(err.message)
+                throw err;
+            }
+
+            if (!rows) {
+                res.json([])
+            }
+
+            // console.log(rows[0])
+            if(rows) {
+                res.json(rows)
+
+            }
+        })
+    })
 })
 
 const PORT = 3001
