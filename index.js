@@ -8,7 +8,7 @@ const app = express()
 app.use(express.static('build'))
 app.use(express.static('texts'))
 app.use(bodyParser.json());
-app.use(cors())
+// app.use(cors())
 
 app.get('/api/texts', (req, res) => {
     const testFolder = './texts/';
