@@ -1,5 +1,4 @@
 const express = require('express')
-const cors = require('cors')
 const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
 let db = new sqlite3.Database('./db/learn-lang.db')
@@ -8,7 +7,6 @@ const app = express()
 app.use(express.static('build'))
 app.use(express.static('texts'))
 app.use(bodyParser.json());
-// app.use(cors())
 
 app.get('/api/texts', (req, res) => {
     const testFolder = './texts/';
