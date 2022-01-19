@@ -142,11 +142,21 @@ app.post('/api/languages/:language/getTextWords', (req, res) => {
 
 app.post('/api/addtext', (req, res) => {
     let newText = req.body
-    fs.writeFile(`./texts/${newText.title}.txt`, newText.text, err => {
+    fs.writeFileSync(`./texts/${newText.title}.txt`, newText.text, err => {
         if (err) throw (err)
-        console.log('successfully created new text')
-        res.sendStatus(201)
     })
+
+    res.sendStatus(201)
+})
+
+app.delete('/api/deletetext/:text', (req, res) => {
+    console.log(req.params)
+    let textToDelete = req.params.text
+    fs.unlinkSync(`./texts/${textToDelete}`, err => {
+        if (err) throw (err)
+    })
+
+    res.sendStatus(200)
 })
 
 // Catch everything else
