@@ -1,11 +1,12 @@
 const express = require('express')
 const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
+const path = require('path')
 let db = new sqlite3.Database('./db/learn-lang.db')
 
 const app = express()
-app.use(express.static('build'))
-app.use(express.static('texts'))
+app.use(express.static(path.join(__dirname, 'build')))
+app.use(express.static(path.join(__dirname, 'texts')))
 app.use(bodyParser.json());
 
 app.get('/api/texts', (req, res) => {
@@ -118,7 +119,7 @@ app.post('/api/languages/:language/getTextWords', (req, res) => {
     db.parallelize(() => {
         db.all(`SELECT * FROM words
                 WHERE word IN ${words} AND language ='${language}'`, (err, rows) => {
-                    console.log('db response', rows)
+            console.log('db response', rows)
             if (err) {
                 res.status(500).send(err.message)
                 throw err;
@@ -129,13 +130,17 @@ app.post('/api/languages/:language/getTextWords', (req, res) => {
             }
 
             // console.log(rows[0])
-            if(rows) {
+            if (rows) {
                 res.json(rows)
 
             }
         })
     })
 })
+
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname + '/build/index.html'));
+});
 
 const PORT = 3001
 app.listen(process.env.PORT || PORT, () => {
