@@ -2,7 +2,9 @@ const express = require('express')
 const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path')
-let db = new sqlite3.Database('./db/learn-lang.db')
+const fs = require('fs')
+
+const db = new sqlite3.Database('./db/learn-lang.db')
 
 const app = express()
 app.use(express.static(path.join(__dirname, 'build')))
@@ -138,6 +140,17 @@ app.post('/api/languages/:language/getTextWords', (req, res) => {
     })
 })
 
+app.post('/api/addtext', (req, res) => {
+    let newText = req.body
+    fs.writeFile(`./texts/${newText.title}.txt`, newText.text, err => {
+        if (err) throw (err)
+        console.log('successfully created new text')
+        res.sendStatus(201)
+    })
+})
+
+// Catch everything else
+// Needed for heroku
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname + '/build/index.html'));
 });
