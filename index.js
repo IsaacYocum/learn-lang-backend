@@ -29,7 +29,8 @@ app.get('/api/texts', (req, res) => {
 })
 
 app.get('/api/texts/:text', (req, res) => {
-    let text = req.params.text.toLocaleLowerCase();
+    let text = decodeURI(req.params.text.toLocaleLowerCase());
+    console.log(text)
     res.sendFile(text, { root: './texts' })
 })
 
