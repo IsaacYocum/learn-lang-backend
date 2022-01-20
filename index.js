@@ -28,8 +28,8 @@ app.get('/api/texts', (req, res) => {
     // res.sendFile('sample.txt', {root: './texts'})
 })
 
-app.get('/api/texts/:text', (req, res) => {
-    let text = decodeURI(req.params.text.toLocaleLowerCase());
+app.get('/api/texts/:title', (req, res) => {
+    let text = decodeURI(req.params.title.toLocaleLowerCase());
     console.log(text)
     res.sendFile(text, { root: './texts' })
 })
@@ -142,8 +142,9 @@ app.post('/api/languages/:language/getTextWords', (req, res) => {
 })
 
 app.post('/api/addtext', (req, res) => {
-    let newText = req.body
-    fs.writeFileSync(`./texts/${newText.title}.txt`, newText.text, err => {
+    let title = req.body.title.toLowerCase()
+    let text = req.body.text.toLowerCase()
+    fs.writeFileSync(`./texts/${title}.txt`, text, err => {
         if (err) throw (err)
     })
 
