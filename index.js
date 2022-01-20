@@ -143,7 +143,7 @@ app.post('/api/languages/:language/getTextWords', (req, res) => {
 
 app.post('/api/addtext', (req, res) => {
     let title = req.body.title.toLowerCase()
-    let text = req.body.text.toLowerCase()
+    let text = req.body.text
     fs.writeFileSync(`./texts/${title}.txt`, text, err => {
         if (err) throw (err)
     })
