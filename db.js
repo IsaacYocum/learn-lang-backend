@@ -16,9 +16,22 @@ db.serialize(() => {
     .run(`INSERT INTO languages(language)
           VALUES ('english'),
                  ('vietnamese')`)
-    .each(`SELECT language from languages`, (err, row) => {
+    .each(`SELECT language FROM languages`, (err, row) => {
       if (err) throw err;
       console.log(row.language)
+    })
+
+  db.run(`CREATE TABLE texts(textId INTEGER PRIMARY KEY,
+                             language TEXT,
+                             title TEXT,
+                             text TEXT,
+                             FOREIGN KEY(language) REFERENCES languages(language))`)
+    .run(`INSERT INTO texts(title, text, language)
+          VALUES ('sample title1', 'sample text1', 'english'),
+                 ('sample title2', 'sample text2', 'english')`)
+    .each(`SELECT * FROM texts`, (err, row) => {
+      if (err) throw err;
+      console.log(row)
     })
 
   db.run(`CREATE TABLE words(word TEXT PRIMARY KEY, 
@@ -31,7 +44,7 @@ db.serialize(() => {
                  ('boy', 'english', 4, 'boy translation'),
                  ('who', 'english', 3, 'who translation'),
                  ('lived', 'english', 2, 'lived translation')`)
-    .each(`SELECT word from words`, (err, row) => {
+    .each(`SELECT word FROM words`, (err, row) => {
       if (err) throw err;
       console.log(row.word)
     })

@@ -12,26 +12,23 @@ app.use(express.static(path.join(__dirname, 'texts')))
 app.use(bodyParser.json());
 
 app.get('/api/texts', (req, res) => {
-    const testFolder = './texts/';
-    const fs = require('fs');
-
-    fs.readdir(testFolder, (err, files) => {
+    db.all('SELECT * FROM texts', (err, rows) => {
         if (err) throw err;
-        let texts = {
-            texts: []
-        }
-        files.forEach(file => {
-            texts['texts'].push(file)
-        });
-        res.send(texts)
-    });
-    // res.sendFile('sample.txt', {root: './texts'})
+        console.log(rows);
+        res.json(rows)
+    })
 })
 
-app.get('/api/texts/:title', (req, res) => {
-    let text = decodeURI(req.params.title.toLocaleLowerCase());
-    console.log(text)
-    res.sendFile(text, { root: './texts' })
+app.get('/api/texts/:textId', (req, res) => {
+    let textId = req.params.textId
+    console.log(textId)
+    db.all(`SELECT * FROM texts
+            WHERE textId = '${textId}'
+            LIMIT 1`, (err, rows) => {
+        if (err) throw err;
+        console.log(rows);
+        res.json(rows)
+    })
 })
 
 // Languages endpoints
@@ -112,6 +109,7 @@ app.get('/api/languages/:language/words/:word/familiarity', (req, res) => {
     })
 })
 
+// Get all known words from the text being viewed
 app.post('/api/languages/:language/getTextWords', (req, res) => {
     console.log(req.body)
     // let words = `(${req.body.join().toLocaleLowerCase()})`
@@ -142,21 +140,27 @@ app.post('/api/languages/:language/getTextWords', (req, res) => {
 })
 
 app.post('/api/addtext', (req, res) => {
-    let title = req.body.title.toLowerCase()
-    let text = req.body.text
-    fs.writeFileSync(`./texts/${title}.txt`, text, err => {
-        if (err) throw (err)
+    let query = db.prepare("INSERT INTO texts(title, text, language) VALUES(?, ?, ?)")
+    query.run([req.body.title, req.body.text, 'english'], (err) => {
+        if (err) throw err;
     })
 
     res.sendStatus(201)
 })
 
-app.delete('/api/deletetext/:text', (req, res) => {
-    console.log(req.params)
-    let textToDelete = req.params.text
-    fs.unlinkSync(`./texts/${textToDelete}`, err => {
-        if (err) throw (err)
+app.put('/api/edittext/:textId', (req, res) => {
+    let query = db.prepare("UPDATE texts SET title = ?, text = ?, language = ? WHERE textId = ?")
+    query.run([req.body.title, req.body.text, req.body.language, req.body.textId], (err) => {
+        if (err) throw err;
     })
+
+    res.sendStatus(200)
+})
+
+app.delete('/api/deletetext/:textId', (req, res) => {
+    console.log(req.params)
+    let query = db.prepare("DELETE FROM texts WHERE textId = ?")
+    query.run([req.params.textId])
 
     res.sendStatus(200)
 })
