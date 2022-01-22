@@ -26,7 +26,6 @@ app.get('/api/texts/:textId', (req, res) => {
             WHERE textId = '${textId}'
             LIMIT 1`, (err, rows) => {
         if (err) throw err;
-        console.log(rows);
         res.json(rows)
     })
 })
@@ -69,8 +68,10 @@ app.get('/api/languages', (req, res) => {
 app.get('/api/languages/:language', (req, res) => {
     let language = req.params.language.toLocaleLowerCase();
     console.log(language)
-    db.all(`SELECT * FROM languages
-            WHERE language = '${language}'`, (err, rows) => {
+    let query = db.prepare("SELECT * FROM languages WHERE language = '?'")
+    query.all(language, (err, rows) => {
+    // db.all(`SELECT * FROM languages
+    //         WHERE language = '${language}'`, (err, rows) => {
         if (err) {
             res.status(404).send(`404: The language '${language}' does not exist.`)
             throw err;
@@ -135,14 +136,14 @@ app.get('/api/languages/:language/words/:word', (req, res) => {
 app.post('/api/languages/:language/getTextWords', (req, res) => {
     let words = req.body.map(word => word.toLowerCase())
     let wordMap = words.map(() => "?").join(',')
-    // let wordMap2 = words.map(word => `'${word.toLowerCase()}'`).join(',')
     let language = req.params.language.toLowerCase();
 
-    // TODO: figure out how to make language bind correctly
-    let query = db.prepare(`SELECT * FROM words WHERE word IN (${wordMap}) AND language = '${language}'`)
-    // console.log(query.sql)
-    query.all(words, (err, rows) => {
-        // db.all(`SELECT * FROM words WHERE word IN (${wordMap2}) AND language = '${language}'`, (err, rows) => {
+    // the language filter is applied correctly but is not prepared
+    // let query = db.prepare(`SELECT * FROM words WHERE word IN (${wordMap}) AND language = '${language}'`, words) 
+
+    // no results are found because of the language filter
+    let query = db.prepare(`SELECT * FROM words WHERE word IN (${wordMap}) AND language = '?'`, words, language)
+    query.all((err, rows) => {
         if (err) {
             res.status(500).send(err.message)
             throw err;
