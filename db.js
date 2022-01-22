@@ -41,6 +41,7 @@ db.serialize(() => {
                              FOREIGN KEY(language) REFERENCES languages(language))`)
     .run(`INSERT INTO words(word, language, familiarity, translation)
           VALUES ('the', 'english', 5, 'the translation'),
+                 ('and', 'vietnamese', 5, 'and translation'),
                  ('boy', 'english', 4, 'boy translation'),
                  ('who', 'english', 3, 'who translation'),
                  ('lived', 'english', 2, 'lived translation')`)
