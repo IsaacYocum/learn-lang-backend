@@ -82,21 +82,11 @@ app.get('/api/languages/:language', (req, res) => {
 })
 
 // Words endpoints ====================================================================================================
-app.get('/api/languages/:language/words', (req, res) => {
-    // db.all('SELECT * FROM words', (err, rows) => {
-    let query = db.prepare('SELECT * FROM words')
-    query.all((err, rows) => {
-        if (err) throw err;
-        console.log(rows);
-        res.json(rows)
-    })
-})
-
 app.get('/api/languages/:language/words/:word', (req, res) => {
     let language = req.params.language.toLocaleLowerCase();
     let word = req.params.word.toLocaleLowerCase();
 
-    let query = db.prepare("SELECT word, familiarity, translation FROM words WHERE word = ? AND language = ?")
+    let query = db.prepare("SELECT * FROM words WHERE word = ? AND language = '?'")
     query.all(word, language, (err, rows) => {
         if (err) {
             res.status(500).send(err.message)
@@ -110,6 +100,19 @@ app.get('/api/languages/:language/words/:word', (req, res) => {
         res.json(rows[0])
     })
 })
+
+app.get('/api/languages/:language/words', (req, res) => {
+    let language = req.params.language.toLocaleLowerCase();
+
+    let query = db.prepare("SELECT * FROM words WHERE language = ?")
+    query.all(language, (err, rows) => {
+        if (err) throw err;
+        console.log(rows);
+        res.json(rows)
+    })
+})
+
+
 
 // app.get('/api/languages/:language/words/:word/familiarity', (req, res) => {
 //     let language = req.params.language.toLocaleLowerCase();
