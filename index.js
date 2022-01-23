@@ -10,9 +10,18 @@ app.use(express.static(path.join(__dirname, 'build')))
 app.use(express.static(path.join(__dirname, 'texts')))
 app.use(bodyParser.json());
 
+function isNumeric(n) {
+    return !isNaN(parseFloat(n)) && isFinite(n);
+}
+
+function isEmptyArray(array) {
+    return Array.isArray(array) && array.length === 0
+}
+
 // Texts endpoints ====================================================================================================
 app.get('/api/texts', (req, res) => {
-    db.all('SELECT textId, title FROM texts', (err, rows) => {
+    let query = db.prepare('SELECT textId, title FROM texts')
+    query.all((err, rows) => {
         if (err) throw err;
         console.log(rows);
         res.json(rows)
@@ -21,13 +30,21 @@ app.get('/api/texts', (req, res) => {
 
 app.get('/api/texts/:textId', (req, res) => {
     let textId = req.params.textId
-    console.log(textId)
-    db.all(`SELECT textId, title, text FROM texts
-            WHERE textId = '${textId}'
-            LIMIT 1`, (err, rows) => {
-        if (err) throw err;
-        res.json(rows)
-    })
+
+    if (isNumeric(textId)) {
+        let query = db.prepare('SELECT textId, title, text FROM texts WHERE textId = ? LIMIT 1')
+        query.all(textId, (err, rows) => {
+            if (err) throw err;
+            if (isEmptyArray(rows)) {
+                res.sendStatus(404)
+            } else {
+                res.json(rows)
+            }
+        })
+    } else {
+        res.status(400)
+        res.send('An invalid textId was specified.')
+    }
 })
 
 app.post('/api/addtext', (req, res) => {
@@ -49,11 +66,16 @@ app.put('/api/edittext/:textId', (req, res) => {
 })
 
 app.delete('/api/deletetext/:textId', (req, res) => {
-    console.log(req.params)
-    let query = db.prepare("DELETE FROM texts WHERE textId = ?")
-    query.run([req.params.textId])
+    if (req.params.textId) {
+        let query = db.prepare("DELETE FROM texts WHERE textId = ?")
+        query.run([req.params.textId], (err, rows) => {
+            if (err) {
+                res.sendStatus(404)
+            };
 
-    res.sendStatus(200)
+            res.sendStatus(200)
+        })
+    }
 })
 
 // Languages endpoints ================================================================================================
@@ -67,11 +89,9 @@ app.get('/api/languages', (req, res) => {
 
 app.get('/api/languages/:language', (req, res) => {
     let language = req.params.language.toLocaleLowerCase();
-    console.log(language)
-    let query = db.prepare("SELECT * FROM languages WHERE language = '?'")
+
+    let query = db.prepare("SELECT * FROM languages WHERE language = ?")
     query.all(language, (err, rows) => {
-    // db.all(`SELECT * FROM languages
-    //         WHERE language = '${language}'`, (err, rows) => {
         if (err) {
             res.status(404).send(`404: The language '${language}' does not exist.`)
             throw err;
@@ -141,10 +161,6 @@ app.post('/api/languages/:language/getTextWords', (req, res) => {
     let wordMap = words.map(() => "?").join(',')
     let language = req.params.language.toLowerCase();
 
-    // the language filter is applied correctly but is not prepared
-    // let query = db.prepare(`SELECT * FROM words WHERE word IN (${wordMap}) AND language = '${language}'`, words) 
-
-    // no results are found because of the language filter
     let query = db.prepare(`SELECT * FROM words WHERE word IN (${wordMap}) AND language = ?`, [...words, language])
     query.all((err, rows) => {
         if (err) {
