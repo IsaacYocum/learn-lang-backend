@@ -86,7 +86,7 @@ app.get('/api/languages/:language/words/:word', (req, res) => {
     let language = req.params.language.toLocaleLowerCase();
     let word = req.params.word.toLocaleLowerCase();
 
-    let query = db.prepare("SELECT * FROM words WHERE word = ? AND language = '?'")
+    let query = db.prepare("SELECT * FROM words WHERE word = ? AND language = ?")
     query.all(word, language, (err, rows) => {
         if (err) {
             res.status(500).send(err.message)
@@ -145,7 +145,7 @@ app.post('/api/languages/:language/getTextWords', (req, res) => {
     // let query = db.prepare(`SELECT * FROM words WHERE word IN (${wordMap}) AND language = '${language}'`, words) 
 
     // no results are found because of the language filter
-    let query = db.prepare(`SELECT * FROM words WHERE word IN (${wordMap}) AND language = '?'`, words, language)
+    let query = db.prepare(`SELECT * FROM words WHERE word IN (${wordMap}) AND language = ?`, [...words, language])
     query.all((err, rows) => {
         if (err) {
             res.status(500).send(err.message)
