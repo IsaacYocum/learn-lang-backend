@@ -3,7 +3,7 @@
 describe('API tests', () => {
     context('/api/texts', () => {
         it('GET all texts', () => {
-            cy.request('GET', '/api/texts')
+            cy.request('GET', '/api/languages/english/texts')
                 .should((response) => {
                     expect(response.status).to.eq(200)
                     expect(response.body).to.be.a('array')
@@ -63,7 +63,7 @@ describe('API tests', () => {
                         expect(resp.body.text).eq(text.text)
                         expect(resp.body.title).eq(text.title)
 
-                        cy.request('DELETE', '/api/deletetext/' + createdId)
+                        cy.request('DELETE', '/api/texts/' + createdId)
                         .then((resp) => {
                             expect(resp.status).to.eq(200)
                         })
