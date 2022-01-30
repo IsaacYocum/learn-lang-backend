@@ -27,7 +27,7 @@ db.serialize(() => {
                              text TEXT,
                              FOREIGN KEY(language) REFERENCES languages(language))`)
     .run(`INSERT INTO texts(title, text, language)
-          VALUES ('sample title1', 'sample text1', 'english'),
+          VALUES ('sample title1', 'sample text1', 'vietnamese'),
                  ('sample title2', 'sample text2', 'english')`)
     .each(`SELECT * FROM texts`, (err, row) => {
       if (err) throw err;

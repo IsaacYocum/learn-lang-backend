@@ -19,17 +19,22 @@ function isEmptyArray(array) {
 }
 
 // Texts endpoints ====================================================================================================
-app.get('/api/texts', (req, res) => {
-    let query = db.prepare('SELECT textId, title FROM texts')
-    query.all((err, rows) => {
+// Get all texts in language
+app.get('/api/languages/:language/texts', (req, res) => {
+    let language = req.params.language.toLocaleLowerCase();
+
+    let query = db.prepare('SELECT textId, title FROM texts WHERE language = ?')
+    query.all([language], (err, rows) => {
         if (err) throw err;
-        console.log(rows);
+        console.log('texts', rows);
         res.json(rows)
     })
 })
 
+// Get text
 app.get('/api/texts/:textId', (req, res) => {
     let textId = req.params.textId
+    console.log('get', textId)
 
     if (isNumeric(textId)) {
         let query = db.prepare('SELECT textId, title, text FROM texts WHERE textId = ? LIMIT 1')
@@ -38,7 +43,7 @@ app.get('/api/texts/:textId', (req, res) => {
             if (isEmptyArray(rows)) {
                 res.sendStatus(404)
             } else {
-                res.json(rows)
+                res.json(rows[0])
             }
         })
     } else {
@@ -47,25 +52,19 @@ app.get('/api/texts/:textId', (req, res) => {
     }
 })
 
-app.post('/api/addtext', (req, res) => {
-    let query = db.prepare("INSERT INTO texts(title, text, language) VALUES(?, ?, ?)")
-    query.run([req.body.title, req.body.text, 'english'], (err) => {
-        if (err) throw err;
-    })
-
-    res.sendStatus(201)
-})
-
-app.put('/api/edittext/:textId', (req, res) => {
-    let query = db.prepare("UPDATE texts SET title = ?, text = ?, language = ? WHERE textId = ?")
-    query.run([req.body.title, req.body.text, req.body.language, req.body.textId], (err) => {
+// Edit text
+app.put('/api/texts/:textId', (req, res) => {
+    console.log('put', req.body)
+    let query = db.prepare("UPDATE texts SET title = ?, text = ? WHERE textId = ?")
+    query.run([req.body.title, req.body.text, req.params.textId], (err) => {
         if (err) throw err;
     })
 
     res.sendStatus(200)
 })
 
-app.delete('/api/deletetext/:textId', (req, res) => {
+// Delete text
+app.delete('/api/texts/:textId', (req, res) => {
     if (req.params.textId) {
         let query = db.prepare("DELETE FROM texts WHERE textId = ?")
         query.run([req.params.textId], (err, rows) => {
@@ -78,11 +77,46 @@ app.delete('/api/deletetext/:textId', (req, res) => {
     }
 })
 
+app.post('/api/addtext', (req, res) => {
+    let query = db.prepare("INSERT INTO texts(title, text, language) VALUES(?, ?, ?)")
+    query.run([req.body.title, req.body.text, req.body.language], function (err) {
+        if (err) {
+            throw err;
+        } else {
+            res.status(201)
+            res.set('Location', "/texts/viewtext/" + this.lastID)
+            res.send()
+        }
+    })
+})
+
+
+
 // Languages endpoints ================================================================================================
 app.get('/api/languages', (req, res) => {
     db.all('SELECT * FROM languages', (err, rows) => {
         if (err) throw err;
-        console.log(rows);
+        console.log('languages', rows);
+        res.json(rows)
+    })
+})
+
+app.get('/api/languages/languagesdetails', (req, res) => {
+    let query = db.prepare(`SELECT distinct l.language AS id, COUNT(distinct w.word) AS Words, COUNT(distinct t.textId) AS Texts
+                            FROM languages l 
+                            INNER JOIN words w
+                            ON l.language = w.language
+                            INNER JOIN texts t
+                            ON w.language = t.language
+                            GROUP BY l.language
+                            ORDER BY l.language`)
+    query.all((err, rows) => {
+        console.log('language details', rows)
+        if (err) {
+            res.status(404).send(`404: The language '${language}' does not exist.`)
+            throw err;
+        }
+
         res.json(rows)
     })
 })
@@ -100,6 +134,8 @@ app.get('/api/languages/:language', (req, res) => {
         res.json(rows[0])
     })
 })
+
+
 
 // Words endpoints ====================================================================================================
 app.get('/api/languages/:language/words/:word', (req, res) => {
@@ -127,7 +163,7 @@ app.get('/api/languages/:language/words', (req, res) => {
     let query = db.prepare("SELECT * FROM words WHERE language = ?")
     query.all(language, (err, rows) => {
         if (err) throw err;
-        console.log(rows);
+        console.log('words', rows);
         res.json(rows)
     })
 })

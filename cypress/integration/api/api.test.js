@@ -2,7 +2,7 @@
 
 describe('API tests', () => {
     context('/api/texts', () => {
-        it('GET', () => {
+        it('GET all texts', () => {
             cy.request('GET', '/api/texts')
                 .should((response) => {
                     expect(response.status).to.eq(200)
@@ -17,21 +17,59 @@ describe('API tests', () => {
             cy.request('GET', `/api/texts/` + textId)
                 .should((resp) => {
                     expect(resp.status).to.eq(200)
-                    expect(resp.body).to.be.a('array')
-                    expect(resp.body).to.have.property('length').eq(1)
-                    expect(resp.body[0]).property('textId').eq(textId)
-                    expect(resp.body[0]).property('title')
-                    expect(resp.body[0]).property('text')
+                    expect(resp.body).to.be.a('object')
+                    expect(resp.body).property('textId').eq(textId)
+                    expect(resp.body).property('title')
+                    expect(resp.body).property('text')
                 })
         })
 
         it('GET with invalid textId', () => {
             let textId = 'asdf'
-            cy.request({method: 'GET', url: `/api/texts/` + textId, failOnStatusCode: false})
+            cy.request({ method: 'GET', url: `/api/texts/` + textId, failOnStatusCode: false })
                 .should((resp) => {
                     expect(resp.status).to.eq(400)
                     expect(resp.body).eq('An invalid textId was specified.')
                 })
+        })
+
+        it('GET with non-existant textId', () => {
+            let textId = 1234
+            cy.request({ method: 'GET', url: `/api/texts/` + textId, failOnStatusCode: false })
+                .should((resp) => {
+                    expect(resp.status).to.eq(404)
+                    expect(resp.body).eq('Not Found')
+                })
+        })
+
+        it('POST a new text', () => {
+            let text = {
+                "title": "cypress title",
+                "text": "cypress text",
+                "language": "english"
+            }
+
+            cy.request('POST', '/api/addtext', text)
+                .then((resp) => {
+                    let createdId = resp.headers.location.match(new RegExp("\\d+"))
+
+                    expect(resp.status).to.eq(201)
+                    expect(!resp.body)
+                    expect(resp.headers.location).to.eq("/texts/viewtext/" + createdId)
+
+                    cy.request('GET', 'api/texts/' + createdId)
+                    .then((resp) => {
+                        expect(resp.body.title).eq(text.title)
+                        expect(resp.body.text).eq(text.text)
+                        expect(resp.body.title).eq(text.title)
+
+                        cy.request('DELETE', '/api/deletetext/' + createdId)
+                        .then((resp) => {
+                            expect(resp.status).to.eq(200)
+                        })
+                    })
+                })
+
         })
     })
 })
