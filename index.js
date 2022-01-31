@@ -94,9 +94,9 @@ app.post('/api/addtext', (req, res) => {
 
 // Languages endpoints ================================================================================================
 app.get('/api/languages', (req, res) => {
-    db.all('SELECT * FROM languages', (err, rows) => {
+    let query = db.prepare('SELECT * FROM languages')
+    query.all((err, rows) => {
         if (err) throw err;
-        console.log('languages', rows);
         res.json(rows)
     })
 })
