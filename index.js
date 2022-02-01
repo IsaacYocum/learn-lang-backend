@@ -217,6 +217,11 @@ app.post('/api/languages/:language/getTextWords', (req, res) => {
 // Catch everything else
 // Needed for heroku
 app.get('*', (req, res) => {
+    if (req.originalUrl.includes('ViewTextWindows')) {
+        console.log(req)
+        res.sendFile(path.join(__dirname + '/build/index.html'));
+    }
+
     res.sendFile(path.join(__dirname + '/build/index.html'));
 });
 
