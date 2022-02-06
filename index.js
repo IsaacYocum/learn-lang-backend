@@ -37,7 +37,7 @@ app.get('/api/texts/:textId', (req, res) => {
     console.log('get', textId)
 
     if (isNumeric(textId)) {
-        let query = db.prepare('SELECT textId, title, text FROM texts WHERE textId = ? LIMIT 1')
+        let query = db.prepare('SELECT * FROM texts WHERE textId = ? LIMIT 1')
         query.all(textId, (err, rows) => {
             if (err) throw err;
             if (isEmptyArray(rows)) {
@@ -157,6 +157,40 @@ app.get('/api/languages/:language/words/:word', (req, res) => {
     })
 })
 
+app.put('/api/languages/:language/words/:word', (req, res) => {
+    let language = req.params.language.toLocaleLowerCase();
+    let word = req.params.word.toLocaleLowerCase();
+    let wordObj = req.body.editedWord
+    console.log('update word', word, language)
+    console.log('word = ', wordObj)
+
+    let query = db.prepare("UPDATE words SET translation = ?, familiarity = ? WHERE word = ? AND language = ?")
+    query.run([wordObj.translation, wordObj.familiarity, word, language], (err) => {
+        if (err) {
+            throw err;
+        } else {
+            res.sendStatus(200)
+        }
+    })
+})
+
+app.post('/api/languages/:language/words/:word', (req, res) => {
+    let language = req.params.language.toLocaleLowerCase();
+    let word = req.params.word.toLocaleLowerCase();
+    let wordObj = req.body.editedWord
+    console.log('update word', word, language)
+    console.log('word = ', wordObj)
+
+    let query = db.prepare("INSERT INTO words(word, language, familiarity, translation) VALUES(?, ?, ?, ?)")
+    query.run([word, language, wordObj.familiarity, wordObj.translation], (err) => {
+        if (err) {
+            throw err;
+        } else {
+            res.sendStatus(201)
+        }
+    })
+})
+
 app.get('/api/languages/:language/words', (req, res) => {
     let language = req.params.language.toLocaleLowerCase();
 
@@ -167,7 +201,6 @@ app.get('/api/languages/:language/words', (req, res) => {
         res.json(rows)
     })
 })
-
 
 
 // app.get('/api/languages/:language/words/:word/familiarity', (req, res) => {
@@ -209,6 +242,7 @@ app.post('/api/languages/:language/getTextWords', (req, res) => {
         }
 
         if (rows) {
+            // console.log(rows)
             res.json(rows)
         }
     })
