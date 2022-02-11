@@ -1,7 +1,8 @@
 const express = require('express')
 const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
-const path = require('path')
+const path = require('path');
+const { resolve } = require('path');
 
 const db = new sqlite3.Database('./db/learn-lang.db')
 
@@ -226,25 +227,57 @@ app.get('/api/languages/:language/words', (req, res) => {
 
 // Get all known words from the text being viewed
 app.post('/api/languages/:language/getTextWords', (req, res) => {
-    let words = req.body.map(word => word.toLowerCase())
-    let wordMap = words.map(() => "?").join(',')
+    let words = req.body.map(word => word.toLowerCase() + '%')
     let language = req.params.language.toLowerCase();
+    // console.log(words, words.length)
 
-    let query = db.prepare(`SELECT * FROM words WHERE word IN (${wordMap}) AND language = ?`, [...words, language])
-    query.all((err, rows) => {
-        if (err) {
-            res.status(500).send(err.message)
-            throw err;
-        }
+    // For larger queries, I need to separate the sql query into smaller chunks. Otherwise this error happens
+    // SQLite error: FTS expression tree is too large (maximum depth 1000)
+    let wordChunks = []
+    while (words.length > 0) {
+        wordChunks.push(words.splice(0, 500))
+    }
+    // console.log('wordChunks', wordChunks, wordChunks.length)
 
-        if (!rows) {
-            res.json([])
-        }
+    let preparedChunks = []
+    wordChunks.forEach((chunk) => {
+        let preparedChunk = ''
+        chunk.forEach((c, i) => {
+            if (i < chunk.length - 1) {
+                preparedChunk += 'word LIKE ? OR '
+            } else {
+                preparedChunk += 'word LIKE ?'
+            }
+        })
+        preparedChunks.push(preparedChunk)
+    })
+    // console.log('preparedChunks', preparedChunks, preparedChunks.length)
+    
+    let results = []
+    let queryDb = new Promise((resolve, reject) => {
+        preparedChunks.forEach((preparedChunk, i) => {
+            let query = db.prepare(`SELECT * FROM words WHERE ${preparedChunk} AND language = ?`, [...wordChunks[i], language])
+            query.all((err, rows) => {
+                if (err) {
+                    res.status(500).send(err.message)
+                    throw err;
+                }
 
-        if (rows) {
-            // console.log(rows)
-            res.json(rows)
-        }
+                if (rows) {
+                    // console.log('rows', rows, typeof rows)
+                    results = results.concat(rows)
+                }
+
+                if (i == preparedChunks.length - 1) {
+                    resolve()
+                }
+            })
+        })
+    })
+
+    queryDb.then(() => {
+        console.log('results', results, typeof results)
+        res.json(results)
     })
 })
 
