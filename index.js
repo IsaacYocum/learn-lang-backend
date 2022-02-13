@@ -166,7 +166,7 @@ app.put('/api/languages/:language/words/:word', (req, res) => {
     console.log('word = ', wordObj)
 
     let query = db.prepare("UPDATE words SET translation = ?, familiarity = ? WHERE word = ? AND language = ?")
-    query.run([wordObj.translation, wordObj.familiarity, word, language], (err) => {
+    query.run([wordObj.translation, wordObj.familiarity, wordObj.word.toLowerCase(), word.language], (err) => {
         if (err) {
             throw err;
         } else {
@@ -179,7 +179,7 @@ app.post('/api/languages/:language/words/:word', (req, res) => {
     let language = req.params.language.toLocaleLowerCase();
     let word = req.params.word.toLocaleLowerCase();
     let wordObj = req.body.editedWord
-    console.log('update word', word, language)
+    console.log('create word', word, language)
     console.log('word = ', wordObj)
 
     let query = db.prepare("INSERT INTO words(word, language, familiarity, translation) VALUES(?, ?, ?, ?)")
