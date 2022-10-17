@@ -31,7 +31,7 @@ router.put('/languages/:language/words/:word', (req, res) => {
     console.log('word = ', wordObj)
 
     let query = db.prepare("UPDATE words SET translation = ?, familiarity = ? WHERE word = ? AND language = ?")
-    query.run([wordObj.translation, wordObj.familiarity, wordObj.word.toLowerCase(), word.language], (err) => {
+    query.run([wordObj.translation, wordObj.familiarity, wordObj.word.toLowerCase(), wordObj.language], (err) => {
         if (err) {
             throw err;
         } else {
