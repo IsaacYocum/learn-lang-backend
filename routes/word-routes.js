@@ -57,18 +57,31 @@ router.post('/languages/:language/words/:word', (req, res) => {
     })
 })
 
+// Return all words in the language sorted by length descending
 router.get('/languages/:language/words', (req, res) => {
     let language = req.params.language.toLocaleLowerCase();
-
-    let query = db.prepare("SELECT * FROM words WHERE language = ?")
-    query.all(language, (err, rows) => {
+    let responseData = {}
+    let expressionsQuery = db.prepare("SELECT * FROM words WHERE language = ? AND word LIKE '% %' ORDER BY LENGTH(word) DESC")
+    expressionsQuery.all(language, (err, rows) => {
         if (err) throw err;
-        let words = {}
+        let expressions = {}
         rows.forEach(row => {
-            words[row.word] = row;
+            expressions[row.word] = row;
+        })        
+        responseData.expressions = expressions;
+
+        let singleWordWordsQuery = db.prepare("SELECT * FROM words WHERE language = ? AND word NOT LIKE '% %' ORDER BY LENGTH(word) DESC")
+        singleWordWordsQuery.all(language, (err, rows) => {
+            if (err) throw err;
+            let singleWordWords = {}
+            rows.forEach(row => {
+                singleWordWords[row.word] = row;
+            })        
+            responseData.words = singleWordWords;
+
+            console.log(responseData)
+            res.json(responseData);
         })
-        console.log('words', words);
-        res.json(words)
     })
 })
 

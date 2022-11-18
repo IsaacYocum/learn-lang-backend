@@ -6,7 +6,7 @@ const languagesRoutes = require('./routes/language-routes')
 const wordRoutes = require('./routes/word-routes')
 
 const app = express()
-app.use(express.static(path.join(__dirname, 'build')))
+// app.use(express.static(path.join(__dirname, 'build')))
 app.use(express.static(path.join(__dirname, 'texts')))
 app.use(bodyParser.json());
 
