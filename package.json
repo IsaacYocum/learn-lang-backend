@@ -17,6 +17,7 @@
   "dependencies": {
     "body-parser": "^1.19.1",
     "express": "^4.17.2",
+    "gh-pages": "^4.0.0",
     "nodemon": "^2.0.15",
     "sqlite3": "^5.0.2"
   },

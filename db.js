@@ -15,13 +15,31 @@ if (!fs.existsSync(dbFilePath)) {
 
   // setup tables
   db.serialize(() => {
-    db.run(`CREATE TABLE languages(language TEXT PRIMARY KEY)`)
-      .run(`INSERT INTO languages(language)
-            VALUES ('english'),
-                   ('vietnamese')`)
-      .each(`SELECT language FROM languages`, (err, row) => {
+    db.run(`CREATE TABLE settings(
+        settingsId INTEGER PRIMARY KEY,
+        settings TEXT
+    )`).run(`INSERT INTO settings(settings)
+            VALUES ('{"test": "globalSettings"}')`)
+          .each(`SELECT * from settings`, (err, row) => {
+              if (err) throw err;
+              console.log(row)
+          })
+
+    db.run(`CREATE TABLE languages(
+        language TEXT PRIMARY KEY,
+        dictionary1Uri TEXT,
+        dictionary2Uri TEXT,
+        googleTranslateUri TEXT,
+        regExpSplitSentences TEXT,
+        exceptionsSplitSentences TEXT,
+        regExpWordCharacters TEXT
+    )`)
+      .run(`INSERT INTO languages(language, dictionary1Uri, dictionary2Uri, googleTranslateUri, regExpSplitSentences, exceptionsSplitSentences, regExpWordCharacters)
+            VALUES ('english', '', '', '', '', '', ''),
+                   ('vietnamese', '', '', '', '', '', '')`)
+      .each(`SELECT * FROM languages`, (err, row) => {
         if (err) throw err;
-        console.log(row.language)
+        console.log(row)
       })
   
     db.run(`CREATE TABLE texts(textId INTEGER PRIMARY KEY,

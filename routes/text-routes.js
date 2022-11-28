@@ -62,7 +62,7 @@ router.delete('/texts/:textId', (req, res) => {
     }
 })
 
-router.post('/addtext', (req, res) => {
+router.post('/texts', (req, res) => {
     let query = db.prepare("INSERT INTO texts(title, text, language) VALUES(?, ?, ?)")
     query.run([req.body.title, req.body.text, req.body.language], function (err) {
         if (err) {
